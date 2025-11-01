@@ -1,0 +1,446 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Mart581d;
+using Mart581d.Extensions;
+using Unity.VisualScripting;
+using UnityEngine;
+
+[SelectionBase]
+public class PlayerScript : MonoBehaviour
+{
+
+    public Rigidbody2D rbdy;
+    public CircleCollider2D coll;
+    
+    public Vector2 velocity;
+
+    public float groundSpeed = 20f;
+    public float jumpSpeed = 40f;
+
+    public float airAcceleration = 20f;
+
+    public float gravity = 80f;
+
+    public float slideSpeed = 20f;
+    
+    public float slideDeceleration = 80f;
+
+    public float wallJumpLockDuration = 0.2f;
+
+    public float wallJumpDistance = 0.5f;
+    public float jumpBufferDuration = 0.1f;
+    public float coyoteTimeDuration = 0.1f;
+    public float barkCooldownDuration = 1f;
+    public float barkBufferDuration = 0.1f;
+    public float barkForce = 60f;
+    public float barkDistance = 4f;
+    public float barkWidth = 3f;
+    
+    // public float acceleration = 20f / 0.25f;
+    // public float deceleration = 20f / 0.5f;
+
+    public enum PlayerState
+    {
+        Ground,
+        Air,
+        WallSlide
+    }
+
+    public PlayerState state;
+    public PlayerInput input;
+
+    public LayerMask groundMask;
+    public Vector2 wallNormal;
+
+    public float wallJumpLock = 0f;
+    public float jumpBuffer = 0f;
+    public float coyoteTime = 0f;
+    public float barkCooldown = 0f;
+    public float barkBuffer = 0f;
+
+    // Update is called once per frame
+    void Update()
+    {
+        UpdateInput();
+    }
+
+    private void UpdateInput()
+    {
+        bool isKeyboard = true;
+
+        if (isKeyboard)
+        {
+            var mousePos = (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            var directionToMouse = (mousePos - this.rbdy.position).normalized;
+            
+            this.input.Update
+                (
+                    Input.GetKey(KeyCode.Space),
+                    Input.GetMouseButton(0),
+                    new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
+                    directionToMouse
+                );
+        }
+        else
+        {
+            throw new NotImplementedException("implement gamepad support");
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        this.velocity += this.rbdy.velocity;
+        this.rbdy.velocity = Vector2.zero;
+
+        jumpBuffer = Mathf.Max(0f, jumpBuffer - Time.deltaTime);
+
+        var input = this.input.Take();
+        
+        this.Bark(input);
+
+        switch (this.state)
+        {
+            case PlayerState.Ground:
+                this.GroundUpdate(input);
+                break;
+            case PlayerState.Air:
+                this.AirUpdate(input);
+                break;
+            case PlayerState.WallSlide:
+                this.WallUpdate(input);
+                break;
+        }
+    }
+
+    void Bark(PlayerInput input)
+    {
+        barkCooldown = Mathf.Max(0f, barkCooldown - Time.deltaTime);
+        barkBuffer = Mathf.Max(0f, barkBuffer - Time.deltaTime);
+        
+        if (input.bark.JustPressed && barkCooldown > 0f)
+        {
+            // todo: should this buffer also store the current aim?
+            barkBuffer = barkBufferDuration;
+            return;
+        }
+        
+        if (barkCooldown == 0f && (input.bark.JustPressed || barkBuffer > 0f))
+        {
+            barkCooldown = barkCooldownDuration;
+            
+            // todo: trigger/push items in contact
+            var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x), groundMask);
+            foreach (var overlap in overlaps)
+            {
+                
+            }
+
+            if (overlaps.Length != 0)
+            {
+                this.barkCooldown = 0f;
+            }
+
+            // add force to player
+            Vector2 force = barkForce * -input.aim;
+            switch (this.state)
+            {
+                case PlayerState.Ground:
+                    if (input.aim.y < 0f)
+                    {
+                        this.velocity = force;
+                        ChangeState(PlayerState.Air);
+                    }
+                    break;
+                case PlayerState.Air:
+                    this.velocity = force;
+                    break;
+                case PlayerState.WallSlide:
+                    if (Vector2.Dot(wallNormal, force.normalized) > 0f)
+                    {
+                        this.velocity = force;
+                        ChangeState(PlayerState.Air);
+                    }
+                    else
+                    {
+                        this.velocity.y += force.y;
+                    }
+
+                    break;
+            }
+            // Physics2D.
+        }
+    }
+    
+    static RaycastHit2D[] hits = new [] { new RaycastHit2D() };
+    static RaycastHit2D CircleCast(Vector2 origin, float radius, Vector2 direction, ContactFilter2D filter2D)
+    {
+        hits[0] = new RaycastHit2D();
+        // hits[0].collider = null; hits[0].transform = null;
+        Physics2D.CircleCast(origin, radius, direction.normalized, filter2D, hits, direction.magnitude);
+
+        return hits[0];
+    }
+
+    private ContactFilter2D ContactFilter()
+    {
+        var filter = new ContactFilter2D().NoFilter();
+
+        filter.useTriggers = false;
+        filter.SetLayerMask(this.groundMask);
+
+        // Debug.Log(filter);
+
+        return filter;
+    }
+
+    private void GroundUpdate(PlayerInput input)
+    {
+        this.velocity.x = this.groundSpeed * input.move.x;
+        // check if still grounded
+        // Physics2D.Cir
+        var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f, Vector2.down * 0.15f, ContactFilter());
+        if (!hit)
+        {
+            this.velocity.x = this.groundSpeed * input.move.x;
+            this.velocity.y = 0;
+            coyoteTime = coyoteTimeDuration;
+            ChangeState(PlayerState.Air);
+            return;
+        }
+
+        if (input.jump.JustPressed || jumpBuffer > 0f)
+        {
+            if (jumpBuffer > 0f)
+            {
+                Debug.Log("jumped from buffer");
+            }
+            this.velocity.x = input.move.x * this.groundSpeed;
+            Jump();
+            ChangeState(PlayerState.Air);
+            return;
+        }
+        
+        // float dV = this.acceleration * this.input.move.x * Time.deltaTime;
+
+        Vector2 dV = this.groundSpeed * input.move.x * Time.deltaTime * Vector2.right;
+        rbdy.position += dV;
+        
+        // rbdy.MovePosition(rbdy.position + dV);
+    }
+
+    private void AirUpdate(PlayerInput input)
+    {
+        this.coyoteTime = Mathf.Max(0f, this.coyoteTime - Time.deltaTime);
+        if (this.coyoteTime > 0f && input.jump.JustPressed)
+        {
+            this.velocity.x = input.move.x * this.groundSpeed;
+            Jump();
+            this.coyoteTime = 0f;
+            return;
+        }
+        
+        this.wallJumpLock = Mathf.Max(0, this.wallJumpLock - Time.deltaTime);
+        if (this.wallJumpLock != 0)
+        {
+            input.move.x = this.wallNormal.x;
+        }
+        // add gravity
+        this.velocity.y += -this.gravity * Time.deltaTime;
+        
+        // check if hit ground
+        if (this.velocity.y <= 0)
+        {
+            var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+                Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
+            if (hit && hit.normal.y > 0.1f)
+            {
+                // Debug.Log(rbdy.position);
+                rbdy.position = rbdy.position.WithY(hit.centroid.y);
+                this.velocity.y = 0;
+                ChangeState(PlayerState.Ground);
+            }
+        }
+        else
+        {
+            var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+                Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
+            if (hit && Vector2.Dot(hit.normal, Vector2.down) > 0.9f)
+            {
+                this.velocity.y = 0;
+                rbdy.position = rbdy.position.WithY(hit.centroid.y);
+            }
+        }
+
+        if (input.move.x != 0)
+        {
+            float accel = airAcceleration * Time.deltaTime;
+            if (Mathf.Sign(this.velocity.x) != input.move.x || Mathf.Abs(this.velocity.x) < this.groundSpeed)
+            {
+                accel *= 8f;
+            }
+
+            this.velocity.x = Mathf.MoveTowards(this.velocity.x, this.groundSpeed * input.move.x, accel);
+        }
+        else
+        {
+            this.velocity.x = Mathf.MoveTowards(this.velocity.x, 0f, this.airAcceleration * Time.deltaTime);
+        }
+
+        // if (input.move.x != 0)
+        {
+            // this.velocity.x = this.groundSpeed * input.move.x;
+            var wall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+                Vector2.right * (this.velocity.x * Time.deltaTime), ContactFilter());
+            bool isWall = Mathf.Abs(wall.normal.x) > 0.99;
+            if (wall && isWall)
+            {
+                rbdy.position = wall.centroid + wall.normal * 0.1f;
+                this.velocity.x = 0;
+                this.wallNormal = wall.normal;
+                this.ChangeState(PlayerState.WallSlide);
+                return;
+            }
+        }
+
+        if (input.jump.JustPressed || jumpBuffer > 0f)
+        {
+            var leftWall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+                Vector2.left * (this.wallJumpDistance + 0.1f), ContactFilter());
+            var rightWall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+                Vector2.right * (this.wallJumpDistance + 0.1f), ContactFilter());
+
+            bool CanUseWall(RaycastHit2D wall)
+            {
+                return (this.wallJumpLock == 0 || Vector2.Dot(wall.normal, this.wallNormal) < 0.9f) &&
+                       Mathf.Abs(wall.normal.y) < 0.1f;
+            }
+
+
+            bool canUseLeft = leftWall && CanUseWall(leftWall);
+            bool canUseRight = rightWall && CanUseWall(rightWall);
+
+            RaycastHit2D? wall;
+            if (canUseLeft && !canUseRight)
+                wall = leftWall;
+            else if (!canUseLeft && canUseRight)
+                wall = rightWall;
+            else if (canUseLeft && canUseRight)
+            {
+                if (leftWall.distance < rightWall.distance)
+                {
+                    wall = leftWall;
+                }
+                else
+                {
+                    wall = rightWall;
+                }
+            }
+            else
+            {
+                // buffer jump input
+                if (jumpBuffer == 0f)
+                    jumpBuffer = jumpBufferDuration;
+                wall = null;
+            }
+
+            if (wall.HasValue)
+            {
+                // Debug.Lo
+                this.wallNormal = wall.Value.normal;
+                this.wallJumpLock = this.wallJumpLockDuration;
+                this.velocity.x = this.wallNormal.x * this.groundSpeed;
+                Jump();
+                // should we return from here?
+            }
+        }
+
+        rbdy.position += this.velocity * Time.deltaTime;
+        // rbdy.MovePosition(rbdy.position + this.velocity * Time.deltaTime);
+
+    }
+
+    private void WallUpdate(PlayerInput input)
+    {
+        this.velocity.y = Mathf.MoveTowards(this.velocity.y, -slideSpeed, Time.deltaTime * this.slideDeceleration);
+        
+        // check if we've slid off the wall
+        var wall = CircleCast(rbdy.position, this.coll.radius * 0.95f, (-wallNormal * (this.coll.radius * 0.06f)),
+            ContactFilter());
+        if (!wall)
+        {
+            ChangeState(PlayerState.Air);
+        }
+        
+        // check if hit floor or ceiling
+        var floorCeil = CircleCast(rbdy.position, this.coll.radius * 0.95f, Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
+
+        if (floorCeil)
+        {
+            this.velocity.y = 0;
+            if (this.velocity.y > 0f)
+            {
+                this.rbdy.position = floorCeil.centroid - Vector2.up * (this.coll.radius * 0.05f);
+            }
+            else
+            {
+                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.coll.radius * 0.05f);
+                this.ChangeState(PlayerState.Ground);
+            }
+        }
+        else
+        {
+            rbdy.position += Vector2.up * (velocity.y * Time.deltaTime);
+        }
+        
+        if (input.jump.JustPressed || jumpBuffer > 0f)
+        {
+            Jump();
+            this.wallJumpLock = this.wallJumpLockDuration;
+            this.velocity.x = this.wallNormal.x * this.groundSpeed;
+            ChangeState(PlayerState.Air);
+        }
+
+        if (input.move.x != 0f && Mathf.Sign(input.move.x) == Mathf.Sign(wallNormal.x))
+        {
+            this.velocity.x = input.move.x * groundSpeed;
+            ChangeState(PlayerState.Air);
+        }
+    }
+
+    private void Jump()
+    {
+        this.jumpBuffer = 0f;
+        this.velocity.y = this.jumpSpeed;
+    }
+
+    private void ChangeState(PlayerState state)
+    {
+        // OnExit
+        switch (this.state)
+        {
+            case PlayerState.Air:
+                if (state != PlayerState.Air)
+                {
+                    this.wallJumpLock = 0f;
+                    this.coyoteTime = 0f;
+                }
+                break;
+        }
+        Debug.Log($"{this.state} -> {state}");
+        this.state = state;
+        // OnEnter
+        switch (this.state)
+        {
+            case PlayerState.Ground:
+                this.velocity.y = 0f;
+                break;
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawRay(transform.position, Vector3.right * (coll.radius + this.wallJumpDistance));
+        Gizmos.DrawRay(transform.position, Vector3.left * (coll.radius + this.wallJumpDistance));
+    }
+}
