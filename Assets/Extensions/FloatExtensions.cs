@@ -102,5 +102,13 @@ namespace Mart581d.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Extend(this Vector2 v, float z) => new Vector3(v.x, v.y, z);
+
+        public static bool AlmostEqual(this float a, float b, float tol = 10e-4f) => Mathf.Abs(b - a) < tol;
+
+        public static bool AlmostEqual(this Vector2 a, Vector2 b, float tol = 10e-4f) =>
+            AlmostEqual(a.x, b.x, tol) && AlmostEqual(a.y, b.y, tol);
+
+        public static bool AlmostEqual(this Vector3 a, Vector3 b, float tol = 10e-4f) =>
+            AlmostEqual(a.x, b.x, tol) && AlmostEqual(a.y, b.y, tol) && AlmostEqual(a.z, b.z, tol);
     }
 }

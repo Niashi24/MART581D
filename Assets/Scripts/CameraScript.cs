@@ -8,7 +8,7 @@ using UnityEngine;
 public class CameraScript : MonoBehaviour
 {
     public Transform target;
-    public Camera camera;
+    public new Camera camera;
     public Vector2 offset;
     [Min(0.01f)]
     public float halfLife;

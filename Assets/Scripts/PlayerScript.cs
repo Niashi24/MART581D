@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Mart581d;
 using Mart581d.Extensions;
 using Unity.VisualScripting;
@@ -36,6 +37,7 @@ public class PlayerScript : MonoBehaviour
     public float barkForce = 60f;
     public float barkDistance = 4f;
     public float barkWidth = 3f;
+    public float velocityBufferTime = 0.5f;
     
     // public float acceleration = 20f / 0.25f;
     // public float deceleration = 20f / 0.5f;
@@ -58,6 +60,9 @@ public class PlayerScript : MonoBehaviour
     public float coyoteTime = 0f;
     public float barkCooldown = 0f;
     public float barkBuffer = 0f;
+    public bool canBark = true;
+
+    private Queue<(Vector2, float)> storedVelocity = new();
 
     // Update is called once per frame
     void Update()
@@ -88,9 +93,37 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    private void StoreVelocity(Vector2 vel)
+    {
+        storedVelocity.Enqueue((this.rbdy.velocity, Time.time));
+        while (true)
+        {
+            if (storedVelocity.Count == 0) break;
+            var (_, time) = storedVelocity.Peek();
+            if (!(Time.time - time > this.velocityBufferTime))
+                break;
+            
+            storedVelocity.Dequeue();
+        }
+    }
+
+    private Vector2 TakeStoredMomentum()
+    {
+        var x = this.storedVelocity.Select(v => v.Item1.x).ToArray();
+        Array.Sort(x);
+        var y = this.storedVelocity.Select(v => v.Item1.y).ToArray();
+        Array.Sort(y);
+        // to avoid weird values, we make sure this value (or higher) was in at least 10% of the queue (by sorting)
+        int i = (int)(x.Length * 0.9f) - 1;
+        
+        this.storedVelocity.Clear();
+        return new Vector2(x[i], y[i]);
+    }
+
     private void FixedUpdate()
     {
         this.velocity += this.rbdy.velocity;
+        StoreVelocity(this.rbdy.velocity);
         this.rbdy.velocity = Vector2.zero;
 
         jumpBuffer = Mathf.Max(0f, jumpBuffer - Time.deltaTime);
@@ -125,22 +158,12 @@ public class PlayerScript : MonoBehaviour
             return;
         }
         
-        if (barkCooldown == 0f && (input.bark.JustPressed || barkBuffer > 0f))
+        if (canBark && barkCooldown == 0f && (input.bark.JustPressed || barkBuffer > 0f))
         {
             barkCooldown = barkCooldownDuration;
+
+            wallJumpLock = 0f;
             
-            // todo: trigger/push items in contact
-            var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x), groundMask);
-            foreach (var overlap in overlaps)
-            {
-                
-            }
-
-            if (overlaps.Length != 0)
-            {
-                this.barkCooldown = 0f;
-            }
-
             // add force to player
             Vector2 force = barkForce * -input.aim;
             switch (this.state)
@@ -150,15 +173,19 @@ public class PlayerScript : MonoBehaviour
                     {
                         this.velocity = force;
                         ChangeState(PlayerState.Air);
+                        canBark = false;
+                        // barkCooldown = barkCooldownDuration;
                     }
                     break;
                 case PlayerState.Air:
                     this.velocity = force;
+                    canBark = false;
                     break;
                 case PlayerState.WallSlide:
                     if (Vector2.Dot(wallNormal, force.normalized) > 0f)
                     {
                         this.velocity = force;
+                        canBark = false;
                         ChangeState(PlayerState.Air);
                     }
                     else
@@ -168,7 +195,16 @@ public class PlayerScript : MonoBehaviour
 
                     break;
             }
-            // Physics2D.
+            
+            // todo: trigger/push items in contact
+            var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x) * Mathf.Rad2Deg, groundMask);
+            foreach (var overlap in overlaps)
+            {
+                if (overlap.TryGetComponent<BarkTriggerScript>(out var trigger))
+                {
+                    trigger.Trigger(this);
+                }
+            }
         }
     }
     
@@ -197,6 +233,7 @@ public class PlayerScript : MonoBehaviour
     private void GroundUpdate(PlayerInput input)
     {
         this.velocity.x = this.groundSpeed * input.move.x;
+        this.velocity.y = 0f;
         // check if still grounded
         // Physics2D.Cir
         var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f, Vector2.down * 0.15f, ContactFilter());
@@ -205,6 +242,8 @@ public class PlayerScript : MonoBehaviour
             this.velocity.x = this.groundSpeed * input.move.x;
             this.velocity.y = 0;
             coyoteTime = coyoteTimeDuration;
+            this.velocity += TakeStoredMomentum().Log();
+            Debug.Log(this.velocity);
             ChangeState(PlayerState.Air);
             return;
         }
@@ -363,12 +402,14 @@ public class PlayerScript : MonoBehaviour
     private void WallUpdate(PlayerInput input)
     {
         this.velocity.y = Mathf.MoveTowards(this.velocity.y, -slideSpeed, Time.deltaTime * this.slideDeceleration);
+        this.velocity.x = 0f;
         
         // check if we've slid off the wall
         var wall = CircleCast(rbdy.position, this.coll.radius * 0.95f, (-wallNormal * (this.coll.radius * 0.06f)),
             ContactFilter());
         if (!wall)
         {
+            this.velocity += TakeStoredMomentum();
             ChangeState(PlayerState.Air);
         }
         
@@ -395,9 +436,9 @@ public class PlayerScript : MonoBehaviour
         
         if (input.jump.JustPressed || jumpBuffer > 0f)
         {
-            Jump();
             this.wallJumpLock = this.wallJumpLockDuration;
             this.velocity.x = this.wallNormal.x * this.groundSpeed;
+            Jump();
             ChangeState(PlayerState.Air);
         }
 
@@ -412,6 +453,7 @@ public class PlayerScript : MonoBehaviour
     {
         this.jumpBuffer = 0f;
         this.velocity.y = this.jumpSpeed;
+        this.velocity += this.TakeStoredMomentum().Log();
     }
 
     private void ChangeState(PlayerState state)
@@ -427,6 +469,12 @@ public class PlayerScript : MonoBehaviour
                 }
                 break;
         }
+
+        if (this.state == PlayerState.Ground && state == PlayerState.Air)
+        {
+            this.barkCooldown = 0f;
+        }
+        
         Debug.Log($"{this.state} -> {state}");
         this.state = state;
         // OnEnter
@@ -434,6 +482,10 @@ public class PlayerScript : MonoBehaviour
         {
             case PlayerState.Ground:
                 this.velocity.y = 0f;
+                canBark = true;
+                break;
+            case PlayerState.WallSlide:
+                canBark = true;
                 break;
         }
     }
@@ -442,5 +494,29 @@ public class PlayerScript : MonoBehaviour
     {
         Gizmos.DrawRay(transform.position, Vector3.right * (coll.radius + this.wallJumpDistance));
         Gizmos.DrawRay(transform.position, Vector3.left * (coll.radius + this.wallJumpDistance));
+        
+        // var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x), groundMask);
+
+        var rotation = Mathf.Atan2(input.aim.y, input.aim.x) * Mathf.Rad2Deg;
+        Gizmos.matrix = Matrix4x4.TRS(rbdy.position + input.aim * (this.barkDistance / 2),
+            Quaternion.Euler(0, 0, rotation), new Vector3(barkDistance, barkWidth, 1));
+        
+        
+        
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+        Gizmos.matrix = Matrix4x4.identity;
+    }
+
+    // 1 = ready, 0 = just barked
+    public float GetBarkCooldownPercent()
+    {
+        var inverse = this.barkCooldown / this.barkCooldownDuration;
+        return 1 - inverse;
+    }
+
+    public void ResetBark()
+    {
+        this.canBark = true;
+        this.barkCooldown = 0f;
     }
 }
