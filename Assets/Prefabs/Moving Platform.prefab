@@ -62,7 +62,7 @@ Transform:
   m_GameObject: {fileID: 6890676877027730728}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.68, y: -9.05, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 20, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -136,7 +136,8 @@ MonoBehaviour:
   rbdy: {fileID: 4663836333981594511}
   movingToEnd: 0
   autoRepeat: 0
-  moveSpeed: 5
+  moveToSpeed: 20
+  moveBackSpeed: 20
 --- !u!50 &4663836333981594511
 Rigidbody2D:
   serializedVersion: 4
@@ -234,7 +235,7 @@ Transform:
   m_GameObject: {fileID: 6941354962144900609}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.7, y: 1.05, z: 0}
+  m_LocalPosition: {x: 0, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -115,6 +115,8 @@ public class PlayerScript : MonoBehaviour
 
     private Vector2 TakeStoredMomentum()
     {
+        if (this.storedVelocity.Count == 0) return Vector2.zero;
+        
         // this allocates but its not every frame so whatever
         var x = this.storedVelocity.Select(v => v.Item1.x)
             // surely there will be no issues with having both negative and positive values (<- clueless)
@@ -125,8 +127,9 @@ public class PlayerScript : MonoBehaviour
             .OrderBy(Mathf.Abs)
             .ToArray();
         
-        // // to avoid weird values, we make sure this value (or higher) was in at least 10% of the queue (by sorting)
-        int i = (int)(x.Length * 0.9f) - 1;
+        // to avoid weird values, we make sure this value (or higher) was in at least 10% of the queue (by sorting)
+        // clamp index to bounds
+        int i = Mathf.Clamp((int)(x.Length * 0.9f), 0, storedVelocity.Count - 1);
         
         this.storedVelocity.Clear();
         return new Vector2(x[i], y[i]);
