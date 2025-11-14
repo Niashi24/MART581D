@@ -52,7 +52,8 @@ public class PlayerAnimator : MonoBehaviour
             sprite.flipX = false;
         else if (player.velocity.x < 0f)
             sprite.flipX = true;
-
+    
+        // return color to normal after damage
         sprite.color = Color.Lerp(sprite.color, Color.white, Time.deltaTime * 5);
 
         if (inAnimation) return;

@@ -72,6 +72,7 @@ public class PlayerScript : MonoBehaviour
     public Action OnLand;
     public Action OnJump;
     public Action OnFall;
+    public Action OnBark;
     public Action OnBarkJump;
     public Action<PlayerState, PlayerState> OnChangeState;
     public Action OnTakeDamage;
@@ -208,6 +209,8 @@ public class PlayerScript : MonoBehaviour
             barkCooldown = barkCooldownDuration;
 
             wallJumpLock = 0f;
+            
+            
             
             // add force to player
             Vector2 force = barkForce * -input.aim;
