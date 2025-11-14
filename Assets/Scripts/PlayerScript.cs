@@ -61,8 +61,14 @@ public class PlayerScript : MonoBehaviour
     public float barkCooldown = 0f;
     public float barkBuffer = 0f;
     public bool canBark = true;
+    public Vector2 respawnLocation;
 
     private Queue<(Vector2, float)> storedVelocity = new();
+
+    void Start()
+    {
+        this.respawnLocation = transform.position;
+    }
 
     // Update is called once per frame
     void Update()
@@ -109,11 +115,17 @@ public class PlayerScript : MonoBehaviour
 
     private Vector2 TakeStoredMomentum()
     {
-        var x = this.storedVelocity.Select(v => v.Item1.x).ToArray();
-        Array.Sort(x);
-        var y = this.storedVelocity.Select(v => v.Item1.y).ToArray();
-        Array.Sort(y);
-        // to avoid weird values, we make sure this value (or higher) was in at least 10% of the queue (by sorting)
+        // this allocates but its not every frame so whatever
+        var x = this.storedVelocity.Select(v => v.Item1.x)
+            // surely there will be no issues with having both negative and positive values (<- clueless)
+            .OrderBy(Mathf.Abs)
+            .ToArray();
+        
+        var y = this.storedVelocity.Select(v => v.Item1.y)
+            .OrderBy(Mathf.Abs)
+            .ToArray();
+        
+        // // to avoid weird values, we make sure this value (or higher) was in at least 10% of the queue (by sorting)
         int i = (int)(x.Length * 0.9f) - 1;
         
         this.storedVelocity.Clear();
@@ -172,8 +184,9 @@ public class PlayerScript : MonoBehaviour
                     if (input.aim.y < 0f)
                     {
                         this.velocity = force;
-                        ChangeState(PlayerState.Air);
                         canBark = false;
+                        this.velocity += TakeStoredMomentum();
+                        ChangeState(PlayerState.Air);
                         // barkCooldown = barkCooldownDuration;
                     }
                     break;
@@ -186,6 +199,7 @@ public class PlayerScript : MonoBehaviour
                     {
                         this.velocity = force;
                         canBark = false;
+                        this.velocity += TakeStoredMomentum();
                         ChangeState(PlayerState.Air);
                     }
                     else
@@ -242,8 +256,7 @@ public class PlayerScript : MonoBehaviour
             this.velocity.x = this.groundSpeed * input.move.x;
             this.velocity.y = 0;
             coyoteTime = coyoteTimeDuration;
-            this.velocity += TakeStoredMomentum().Log();
-            Debug.Log(this.velocity);
+            this.velocity += TakeStoredMomentum();
             ChangeState(PlayerState.Air);
             return;
         }
@@ -453,7 +466,7 @@ public class PlayerScript : MonoBehaviour
     {
         this.jumpBuffer = 0f;
         this.velocity.y = this.jumpSpeed;
-        this.velocity += this.TakeStoredMomentum().Log();
+        this.velocity += this.TakeStoredMomentum();
     }
 
     private void ChangeState(PlayerState state)
@@ -501,8 +514,6 @@ public class PlayerScript : MonoBehaviour
         Gizmos.matrix = Matrix4x4.TRS(rbdy.position + input.aim * (this.barkDistance / 2),
             Quaternion.Euler(0, 0, rotation), new Vector3(barkDistance, barkWidth, 1));
         
-        
-        
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         Gizmos.matrix = Matrix4x4.identity;
     }
@@ -518,5 +529,21 @@ public class PlayerScript : MonoBehaviour
     {
         this.canBark = true;
         this.barkCooldown = 0f;
+    }
+
+    public void SetRespawnLocation(Vector2 position)
+    {
+        this.respawnLocation = position;
+    }
+
+    public void TakeDamage()
+    {
+        // remove control
+        // play hit animation
+        // screen cover in
+        // move player to respawn
+        transform.position = respawnLocation;
+        // screen cover out
+        // restore control
     }
 }
