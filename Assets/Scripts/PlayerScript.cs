@@ -210,7 +210,7 @@ public class PlayerScript : MonoBehaviour
 
             wallJumpLock = 0f;
             
-            
+            OnBark?.Invoke();
             
             // add force to player
             Vector2 force = barkForce * -input.aim;
@@ -248,6 +248,7 @@ public class PlayerScript : MonoBehaviour
 
                     break;
             }
+            Debug.Log("here");
             
             // todo: trigger/push items in contact
             var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x) * Mathf.Rad2Deg, groundMask);

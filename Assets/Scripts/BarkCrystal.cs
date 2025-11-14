@@ -28,14 +28,13 @@ public class BarkCrystal : MonoBehaviour
     
     public void Trigger(PlayerScript player)
     {
-        if (available)
-        {
-            available = false;
-            timer = respawnTimer;
-            sprite.color = disabledColor;
+        if (!available) return;
+        
+        available = false;
+        timer = respawnTimer;
+        sprite.color = disabledColor;
 
-            player.ResetBark();
-        }
+        player.ResetBark();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
