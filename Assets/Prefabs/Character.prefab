@@ -73,7 +73,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 8d25b4827746d81449d01dcfd41a26f7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -194,6 +194,7 @@ GameObject:
   - component: {fileID: 2666572945034823514}
   - component: {fileID: 792568952071073273}
   - component: {fileID: 7571819953704387918}
+  - component: {fileID: 6563277528600452302}
   m_Layer: 6
   m_Name: Character
   m_TagString: Player
@@ -294,6 +295,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rbdy: {fileID: 792568952071073273}
   coll: {fileID: 2666572945034823514}
+  radius: 2
   velocity: {x: 0, y: 0}
   groundSpeed: 15
   jumpSpeed: 32
@@ -334,6 +336,30 @@ MonoBehaviour:
   barkBuffer: 0
   canBark: 1
   respawnLocation: {x: 0, y: 0}
+  respawnTimer: 0
+  deathAnimation: {fileID: 7400000, guid: 7ff3ef20fb9dbd04e878c127cf9468c1, type: 2}
+--- !u!114 &6563277528600452302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2497114989666137528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4217d707ec9e157409b2fa987ecc69d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 7571819953704387918}
+  animator: {fileID: 3017417379207738460}
+  sprite: {fileID: 8017888718362104133}
+  idle: {fileID: 7400000, guid: ce15478d8cde03148b0bc4490fe4fa1e, type: 2}
+  jumpStart: {fileID: 7400000, guid: b5060d07e4659e14a94c7225bcc23bae, type: 2}
+  barkJump: {fileID: 7400000, guid: 5cd99d824d5d45243a280318b512d5a1, type: 2}
+  land: {fileID: 7400000, guid: 2467d5f1eb8b0fe4b9f5c9756eb6c45a, type: 2}
+  idleTimeLength: 5
+  idleTimer: 0
+  playingIdleTimer: 0
 --- !u!1 &2942044290049232758
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,6 +13,7 @@ public class PlayerScript : MonoBehaviour
 
     public Rigidbody2D rbdy;
     public CircleCollider2D coll;
+    public float radius = 2f;
     
     public Vector2 velocity;
 
@@ -46,7 +47,8 @@ public class PlayerScript : MonoBehaviour
     {
         Ground,
         Air,
-        WallSlide
+        WallSlide,
+        Dead,
     }
 
     public PlayerState state;
@@ -62,8 +64,18 @@ public class PlayerScript : MonoBehaviour
     public float barkBuffer = 0f;
     public bool canBark = true;
     public Vector2 respawnLocation;
+    public float respawnTimer;
+    public AnimationClip deathAnimation;
 
     private Queue<(Vector2, float)> storedVelocity = new();
+
+    public Action OnLand;
+    public Action OnJump;
+    public Action OnFall;
+    public Action OnBarkJump;
+    public Action<PlayerState, PlayerState> OnChangeState;
+    public Action OnTakeDamage;
+    
 
     void Start()
     {
@@ -141,6 +153,12 @@ public class PlayerScript : MonoBehaviour
         StoreVelocity(this.rbdy.velocity);
         this.rbdy.velocity = Vector2.zero;
 
+        if (this.state == PlayerState.Dead)
+        {
+            this.DeadUpdate();
+            return;
+        }
+
         jumpBuffer = Mathf.Max(0f, jumpBuffer - Time.deltaTime);
 
         var input = this.input.Take();
@@ -158,6 +176,18 @@ public class PlayerScript : MonoBehaviour
             case PlayerState.WallSlide:
                 this.WallUpdate(input);
                 break;
+        }
+    }
+
+    private void DeadUpdate()
+    {
+        this.velocity = Vector2.zero;
+        
+        this.respawnTimer = Mathf.Max(0f, this.respawnTimer - Time.deltaTime);
+        if (this.respawnTimer == 0f)
+        {
+            rbdy.position = respawnLocation;
+            ChangeState(PlayerState.Ground);
         }
     }
 
@@ -189,6 +219,7 @@ public class PlayerScript : MonoBehaviour
                         this.velocity = force;
                         canBark = false;
                         this.velocity += TakeStoredMomentum();
+                        OnBarkJump?.Invoke();
                         ChangeState(PlayerState.Air);
                         // barkCooldown = barkCooldownDuration;
                     }
@@ -196,6 +227,7 @@ public class PlayerScript : MonoBehaviour
                 case PlayerState.Air:
                     this.velocity = force;
                     canBark = false;
+                    OnBarkJump?.Invoke();
                     break;
                 case PlayerState.WallSlide:
                     if (Vector2.Dot(wallNormal, force.normalized) > 0f)
@@ -203,6 +235,7 @@ public class PlayerScript : MonoBehaviour
                         this.velocity = force;
                         canBark = false;
                         this.velocity += TakeStoredMomentum();
+                        OnBarkJump?.Invoke();
                         ChangeState(PlayerState.Air);
                     }
                     else
@@ -253,13 +286,14 @@ public class PlayerScript : MonoBehaviour
         this.velocity.y = 0f;
         // check if still grounded
         // Physics2D.Cir
-        var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f, Vector2.down * 0.15f, ContactFilter());
+        var hit = CircleCast(rbdy.position, this.radius - 0.1f, Vector2.down * 0.15f, ContactFilter());
         if (!hit)
         {
             this.velocity.x = this.groundSpeed * input.move.x;
             this.velocity.y = 0;
             coyoteTime = coyoteTimeDuration;
             this.velocity += TakeStoredMomentum();
+            OnFall?.Invoke();
             ChangeState(PlayerState.Air);
             return;
         }
@@ -306,19 +340,20 @@ public class PlayerScript : MonoBehaviour
         // check if hit ground
         if (this.velocity.y <= 0)
         {
-            var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+            var hit = CircleCast(rbdy.position, this.radius - 0.1f,
                 Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
             if (hit && hit.normal.y > 0.1f)
             {
                 // Debug.Log(rbdy.position);
                 rbdy.position = rbdy.position.WithY(hit.centroid.y);
                 this.velocity.y = 0;
+                OnLand?.Invoke();
                 ChangeState(PlayerState.Ground);
             }
         }
         else
         {
-            var hit = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+            var hit = CircleCast(rbdy.position, this.radius - 0.1f,
                 Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
             if (hit && Vector2.Dot(hit.normal, Vector2.down) > 0.9f)
             {
@@ -345,7 +380,7 @@ public class PlayerScript : MonoBehaviour
         // if (input.move.x != 0)
         {
             // this.velocity.x = this.groundSpeed * input.move.x;
-            var wall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+            var wall = CircleCast(rbdy.position, this.radius - 0.1f,
                 Vector2.right * (this.velocity.x * Time.deltaTime), ContactFilter());
             bool isWall = Mathf.Abs(wall.normal.x) > 0.99;
             if (wall && isWall)
@@ -360,9 +395,9 @@ public class PlayerScript : MonoBehaviour
 
         if (input.jump.JustPressed || jumpBuffer > 0f)
         {
-            var leftWall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+            var leftWall = CircleCast(rbdy.position, this.radius - 0.1f,
                 Vector2.left * (this.wallJumpDistance + 0.1f), ContactFilter());
-            var rightWall = CircleCast(rbdy.position, this.coll.radius - 0.1f,
+            var rightWall = CircleCast(rbdy.position, this.radius - 0.1f,
                 Vector2.right * (this.wallJumpDistance + 0.1f), ContactFilter());
 
             bool CanUseWall(RaycastHit2D wall)
@@ -421,27 +456,28 @@ public class PlayerScript : MonoBehaviour
         this.velocity.x = 0f;
         
         // check if we've slid off the wall
-        var wall = CircleCast(rbdy.position, this.coll.radius * 0.95f, (-wallNormal * (this.coll.radius * 0.06f)),
+        var wall = CircleCast(rbdy.position, this.radius * 0.95f, (-wallNormal * (this.radius * 0.06f)),
             ContactFilter());
         if (!wall)
         {
             this.velocity += TakeStoredMomentum();
+            OnFall?.Invoke();
             ChangeState(PlayerState.Air);
         }
         
         // check if hit floor or ceiling
-        var floorCeil = CircleCast(rbdy.position, this.coll.radius * 0.95f, Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
+        var floorCeil = CircleCast(rbdy.position, this.radius * 0.95f, Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
 
         if (floorCeil)
         {
             this.velocity.y = 0;
             if (this.velocity.y > 0f)
             {
-                this.rbdy.position = floorCeil.centroid - Vector2.up * (this.coll.radius * 0.05f);
+                this.rbdy.position = floorCeil.centroid - Vector2.up * (this.radius * 0.05f);
             }
             else
             {
-                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.coll.radius * 0.05f);
+                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.radius * 0.05f);
                 this.ChangeState(PlayerState.Ground);
             }
         }
@@ -461,6 +497,7 @@ public class PlayerScript : MonoBehaviour
         if (input.move.x != 0f && Mathf.Sign(input.move.x) == Mathf.Sign(wallNormal.x))
         {
             this.velocity.x = input.move.x * groundSpeed;
+            OnFall?.Invoke();
             ChangeState(PlayerState.Air);
         }
     }
@@ -470,6 +507,8 @@ public class PlayerScript : MonoBehaviour
         this.jumpBuffer = 0f;
         this.velocity.y = this.jumpSpeed;
         this.velocity += this.TakeStoredMomentum();
+        
+        OnJump?.Invoke();
     }
 
     private void ChangeState(PlayerState state)
@@ -492,6 +531,7 @@ public class PlayerScript : MonoBehaviour
         }
         
         Debug.Log($"{this.state} -> {state}");
+        OnChangeState?.Invoke(this.state, state);
         this.state = state;
         // OnEnter
         switch (this.state)
@@ -508,8 +548,8 @@ public class PlayerScript : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.DrawRay(transform.position, Vector3.right * (coll.radius + this.wallJumpDistance));
-        Gizmos.DrawRay(transform.position, Vector3.left * (coll.radius + this.wallJumpDistance));
+        Gizmos.DrawRay(transform.position, Vector3.right * (radius + this.wallJumpDistance));
+        Gizmos.DrawRay(transform.position, Vector3.left * (radius + this.wallJumpDistance));
         
         // var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x), groundMask);
 
@@ -545,7 +585,9 @@ public class PlayerScript : MonoBehaviour
         // play hit animation
         // screen cover in
         // move player to respawn
-        transform.position = respawnLocation;
+        OnTakeDamage?.Invoke();
+        this.respawnTimer = deathAnimation.length;
+        ChangeState(PlayerState.Dead);
         // screen cover out
         // restore control
     }
