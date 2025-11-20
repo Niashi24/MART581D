@@ -2695,7 +2695,7 @@ Transform:
   m_GameObject: {fileID: 590729712}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 263, y: -96, z: 0}
+  m_LocalPosition: {x: 263, y: -95, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -39279,17 +39279,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: Character
       objectReference: {fileID: 0}
-    - target: {fileID: 2914261196266606130, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
-      propertyPath: MaxDistance
-      value: 100000
-      objectReference: {fileID: 0}
-    - target: {fileID: 2914261196266606130, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
-      propertyPath: MinDistance
-      value: 99009.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 2914261196266606130, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
-      propertyPath: rolloffMode
-      value: 1
+    - target: {fileID: 3000714824072556854, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
+      propertyPath: m_Color.a
+      value: 0.5019608
       objectReference: {fileID: 0}
     - target: {fileID: 3666942434354278170, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -39331,10 +39323,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6529307646049483863, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
-      propertyPath: slide
-      value: 
-      objectReference: {fileID: 8300000, guid: ef0a61ca4c8eeb44b95a7386107b623d, type: 3}
+    - target: {fileID: 6563277528600452302, guid: a480610e30a453a44aba4c5a8cc1dcca, type: 3}
+      propertyPath: barkTimerDuration
+      value: 0.1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

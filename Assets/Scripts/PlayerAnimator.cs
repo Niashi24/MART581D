@@ -14,6 +14,9 @@ public class PlayerAnimator : MonoBehaviour
     public AnimationClip jumpStart;
     public AnimationClip barkJump;
     public AnimationClip land;
+    public SpriteRenderer barkSprite;
+
+    public float barkTimerDuration = 0.5f;
 
     public float idleTimeLength = 5f;
 
@@ -26,6 +29,9 @@ public class PlayerAnimator : MonoBehaviour
     private bool inAnimation = false;
     public float idleTimer = 0f;
     public float playingIdleTimer = 0f;
+    public float barkTimer = 0f;
+
+    public Color barkColor = Color.gray;
 
     [CanBeNull] private Coroutine _playerAfterCoroutine;
 
@@ -33,6 +39,7 @@ public class PlayerAnimator : MonoBehaviour
     {
         player.OnJump += PlayJump;
         player.OnBarkJump += PlayBarkJump;
+        player.OnBark += PlayBark;
         player.OnLand += Land;
         player.OnFall += () => animator.Play("Fall");
         player.OnChangeState += OnChangeState;
@@ -52,9 +59,14 @@ public class PlayerAnimator : MonoBehaviour
             sprite.flipX = false;
         else if (player.velocity.x < 0f)
             sprite.flipX = true;
+
+        barkTimer = Mathf.Max(0f, barkTimer - Time.deltaTime);
+        barkSprite.gameObject.SetActive(barkTimer > 0f);
     
         // return color to normal after damage
-        sprite.color = Color.Lerp(sprite.color, Color.white, Time.deltaTime * 5);
+        var targetColor = Color.white;
+        if (!player.canBark) targetColor = barkColor;
+        sprite.color = Color.Lerp(sprite.color, targetColor, Time.deltaTime * 5);
 
         if (inAnimation) return;
 
@@ -105,9 +117,20 @@ public class PlayerAnimator : MonoBehaviour
         _playerAfterCoroutine = StartCoroutine(PlayAfter(jumpStart.length, "Fall"));
     }
 
+    private void PlayBark()
+    {
+        barkSprite.gameObject.SetActive(true);
+        barkTimer = barkTimerDuration;
+        var sprTransform = barkSprite.transform;
+        sprTransform.localPosition = player.input.aim * player.barkDistance / 2f;
+        sprTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(player.input.aim.y, player.input.aim.x) * Mathf.Rad2Deg);
+        sprTransform.localScale = new Vector3(player.barkDistance, player.barkWidth, 1f);
+    }
+
     private void PlayBarkJump()
     {
         if (_playerAfterCoroutine != null) StopCoroutine(_playerAfterCoroutine);
+        sprite.color = Color.gray;
         
         animator.Play("BarkJump");
         _playerAfterCoroutine = StartCoroutine(PlayAfter(barkJump.length, "Fall"));
