@@ -29,6 +29,7 @@ public class BarkCrystal : MonoBehaviour
     public void Trigger(PlayerScript player)
     {
         if (!available) return;
+        if (player.canBark) return;
         
         available = false;
         timer = respawnTimer;
@@ -44,6 +45,7 @@ public class BarkCrystal : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             var player = other.GetComponent<PlayerScript>();
+            if (player.canBark) return;
             available = false;
             timer = respawnTimer;
             sprite.color = disabledColor;

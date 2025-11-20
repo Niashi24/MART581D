@@ -6892,6 +6892,26 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
+  - first: {x: 164, y: -48, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: 165, y: -48, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   - first: {x: 230, y: -48, z: 0}
     second:
       serializedVersion: 2
@@ -37954,13 +37974,13 @@ Tilemap:
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 3487
+  - m_RefCount: 3489
     m_Data: {fileID: 11400000, guid: dc77c6efbd8804b4a8fe1fcff73a0a95, type: 2}
   m_TileSpriteArray:
-  - m_RefCount: 3487
+  - m_RefCount: 3489
     m_Data: {fileID: 21300000, guid: 09adadca9691a0f44ae1d793872a5333, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 3487
+  - m_RefCount: 3489
     m_Data:
       e00: 1
       e01: 0
@@ -37979,7 +37999,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 3487
+  - m_RefCount: 3489
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -38245,6 +38265,10 @@ CompositeCollider2D:
       - X: 2980000000
         Y: -1000000000
     - - X: 3320000000
+        Y: -940000000
+      - X: 3280000000
+        Y: -940000000
+      - X: 3280000000
         Y: -960000000
       - X: 3180000000
         Y: -960000000
@@ -38341,7 +38365,9 @@ CompositeCollider2D:
       - {x: 106, y: -26.000029}
       - {x: 106.00003, y: -100}
     - - {x: 331.99997, y: -100}
-      - {x: 331.99997, y: -96}
+      - {x: 331.99997, y: -94}
+      - {x: 328, y: -94.00003}
+      - {x: 327.99997, y: -96}
       - {x: 318, y: -96.00003}
       - {x: 318.00003, y: -98}
       - {x: 320, y: -98.00003}
