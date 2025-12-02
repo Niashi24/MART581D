@@ -12,8 +12,9 @@ public class PlayerScript : MonoBehaviour
 {
 
     public Rigidbody2D rbdy;
-    public CircleCollider2D coll;
-    public float radius = 2f;
+    // public CircleCollider2D coll;
+    public CapsuleCollider2D capsule;
+    // public float radius = 2f;
     
     public Vector2 velocity;
 
@@ -264,11 +265,12 @@ public class PlayerScript : MonoBehaviour
     
     static RaycastHit2D[] hits = new [] { new RaycastHit2D() };
     
-    static RaycastHit2D CircleCast(Vector2 origin, float radius, Vector2 direction, ContactFilter2D filter2D)
+    static RaycastHit2D CapsuleCast(Vector2 origin, Vector2 size, Vector2 direction, ContactFilter2D filter2D)
     {
         hits[0] = new RaycastHit2D();
+        Physics2D.CapsuleCast(origin, size, CapsuleDirection2D.Vertical, 0f, direction.normalized, filter2D, hits, direction.magnitude);
         // hits[0].collider = null; hits[0].transform = null;
-        Physics2D.CircleCast(origin, radius, direction.normalized, filter2D, hits, direction.magnitude);
+        // Physics2D.CircleCast(origin, radius, direction.normalized, filter2D, hits, direction.magnitude);
 
         return hits[0];
     }
@@ -291,7 +293,7 @@ public class PlayerScript : MonoBehaviour
         this.velocity.y = 0f;
         // check if still grounded
         // Physics2D.Cir
-        var hit = CircleCast(rbdy.position, this.radius - 0.1f, Vector2.down * 0.15f, ContactFilter());
+        var hit = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f, Vector2.down * 0.15f, ContactFilter());
         if (!hit)
         {
             this.velocity.x = this.groundSpeed * input.move.x;
@@ -345,7 +347,7 @@ public class PlayerScript : MonoBehaviour
         // check if hit ground
         if (this.velocity.y <= 0)
         {
-            var hit = CircleCast(rbdy.position, this.radius - 0.1f,
+            var hit = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f,
                 Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
             if (hit && hit.normal.y > 0.1f)
             {
@@ -358,7 +360,7 @@ public class PlayerScript : MonoBehaviour
         }
         else
         {
-            var hit = CircleCast(rbdy.position, this.radius - 0.1f,
+            var hit = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f,
                 Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
             if (hit && Vector2.Dot(hit.normal, Vector2.down) > 0.9f)
             {
@@ -385,7 +387,7 @@ public class PlayerScript : MonoBehaviour
         // if (input.move.x != 0)
         {
             // this.velocity.x = this.groundSpeed * input.move.x;
-            var wall = CircleCast(rbdy.position, this.radius - 0.1f,
+            var wall = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f,
                 Vector2.right * (this.velocity.x * Time.deltaTime), ContactFilter());
             bool isWall = Mathf.Abs(wall.normal.x) > 0.99;
             if (wall && isWall)
@@ -400,9 +402,9 @@ public class PlayerScript : MonoBehaviour
 
         if (input.jump.JustPressed || jumpBuffer > 0f)
         {
-            var leftWall = CircleCast(rbdy.position, this.radius - 0.1f,
+            var leftWall = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f,
                 Vector2.left * (this.wallJumpDistance + 0.1f), ContactFilter());
-            var rightWall = CircleCast(rbdy.position, this.radius - 0.1f,
+            var rightWall = CapsuleCast(rbdy.position, this.capsule.size - Vector2.one * 0.1f,
                 Vector2.right * (this.wallJumpDistance + 0.1f), ContactFilter());
 
             bool CanUseWall(RaycastHit2D wall)
@@ -461,7 +463,7 @@ public class PlayerScript : MonoBehaviour
         this.velocity.x = 0f;
         
         // check if we've slid off the wall
-        var wall = CircleCast(rbdy.position, this.radius * 0.95f, (-wallNormal * (this.radius * 0.06f)),
+        var wall = CapsuleCast(rbdy.position, this.capsule.size * 0.95f, (-wallNormal * (this.capsule.size.x * 0.06f)),
             ContactFilter());
         if (!wall)
         {
@@ -471,18 +473,18 @@ public class PlayerScript : MonoBehaviour
         }
         
         // check if hit floor or ceiling
-        var floorCeil = CircleCast(rbdy.position, this.radius * 0.95f, Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
+        var floorCeil = CapsuleCast(rbdy.position, this.capsule.size * 0.95f, Vector2.up * (this.velocity.y * Time.deltaTime), ContactFilter());
 
         if (floorCeil)
         {
             this.velocity.y = 0;
             if (this.velocity.y > 0f)
             {
-                this.rbdy.position = floorCeil.centroid - Vector2.up * (this.radius * 0.05f);
+                this.rbdy.position = floorCeil.centroid - Vector2.up * (this.capsule.size.y * 0.05f);
             }
             else
             {
-                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.radius * 0.05f);
+                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.capsule.size.y * 0.05f);
                 this.ChangeState(PlayerState.Ground);
             }
         }
@@ -557,8 +559,8 @@ public class PlayerScript : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.DrawRay(transform.position, Vector3.right * (radius + this.wallJumpDistance));
-        Gizmos.DrawRay(transform.position, Vector3.left * (radius + this.wallJumpDistance));
+        Gizmos.DrawRay(transform.position, Vector3.right * (this.capsule.size.x + this.wallJumpDistance));
+        Gizmos.DrawRay(transform.position, Vector3.left * (this.capsule.size.x + this.wallJumpDistance));
         
         // var overlaps = Physics2D.OverlapBoxAll(rbdy.position + input.aim * (this.barkDistance / 2), new Vector2(barkDistance, barkWidth), Mathf.Atan2(input.aim.y, input.aim.x), groundMask);
 

@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4, y: 4, z: 1}
+  m_LocalScale: {x: 6, y: 6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3666942434354278170}
@@ -191,8 +191,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3666942434354278170}
-  - component: {fileID: 2666572945034823514}
   - component: {fileID: 792568952071073273}
+  - component: {fileID: 4025871836327361932}
   - component: {fileID: 7571819953704387918}
   - component: {fileID: 6563277528600452302}
   - component: {fileID: 6529307646049483863}
@@ -222,8 +222,35 @@ Transform:
   - {fileID: 5054043934548900770}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!58 &2666572945034823514
-CircleCollider2D:
+--- !u!50 &792568952071073273
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2497114989666137528}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
+--- !u!70 &4025871836327361932
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -255,35 +282,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 2
---- !u!50 &792568952071073273
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2497114989666137528}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0
-  m_GravityScale: 0
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Size: {x: 3, y: 6}
+  m_Direction: 0
 --- !u!114 &7571819953704387918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -297,24 +297,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rbdy: {fileID: 792568952071073273}
-  coll: {fileID: 2666572945034823514}
-  radius: 2
+  capsule: {fileID: 4025871836327361932}
   velocity: {x: 0, y: 0}
-  groundSpeed: 15
-  jumpSpeed: 32
-  airAcceleration: 20
-  gravity: 80
-  slideSpeed: 10
-  slideDeceleration: 120
+  groundSpeed: 22.5
+  jumpSpeed: 48
+  airAcceleration: 30
+  gravity: 120
+  slideSpeed: 15
+  slideDeceleration: 180
   wallJumpLockDuration: 0.45
   wallJumpDistance: 0.5
   jumpBufferDuration: 0.1
   coyoteTimeDuration: 0.1
   barkCooldownDuration: 0.5
   barkBufferDuration: 0.1
-  barkForce: 40
-  barkDistance: 12
-  barkWidth: 6
+  barkForce: 60
+  barkDistance: 15
+  barkWidth: 8
   velocityBufferTime: 0.5
   state: 0
   input:
@@ -361,7 +360,7 @@ MonoBehaviour:
   barkJump: {fileID: 7400000, guid: 5cd99d824d5d45243a280318b512d5a1, type: 2}
   land: {fileID: 7400000, guid: 2467d5f1eb8b0fe4b9f5c9756eb6c45a, type: 2}
   barkSprite: {fileID: 3000714824072556854}
-  barkTimerDuration: 0.5
+  barkTimerDuration: 0.1
   idleTimeLength: 5
   idleTimer: 0
   playingIdleTimer: 0
@@ -683,7 +682,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 0.2783019, b: 0.2783019, a: 1}
+  m_Color: {r: 1, g: 0.2783019, b: 0.2783019, a: 0.5019608}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
