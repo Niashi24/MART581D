@@ -153,6 +153,7 @@ public class PlayerScript : MonoBehaviour
         this.velocity += this.rbdy.velocity;
         StoreVelocity(this.rbdy.velocity);
         this.rbdy.velocity = Vector2.zero;
+        var input = this.input.Take();
 
         if (this.state == PlayerState.Dead)
         {
@@ -162,7 +163,6 @@ public class PlayerScript : MonoBehaviour
 
         jumpBuffer = Mathf.Max(0f, jumpBuffer - Time.deltaTime);
 
-        var input = this.input.Take();
         
         this.Bark(input);
 
@@ -263,6 +263,7 @@ public class PlayerScript : MonoBehaviour
     }
     
     static RaycastHit2D[] hits = new [] { new RaycastHit2D() };
+    
     static RaycastHit2D CircleCast(Vector2 origin, float radius, Vector2 direction, ContactFilter2D filter2D)
     {
         hits[0] = new RaycastHit2D();
@@ -546,6 +547,10 @@ public class PlayerScript : MonoBehaviour
                 break;
             case PlayerState.WallSlide:
                 canBark = true;
+                break;
+            case PlayerState.Dead:
+                this.jumpBuffer = 0f;
+                this.barkBuffer = 0f;
                 break;
         }
     }
