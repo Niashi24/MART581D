@@ -6,6 +6,10 @@ using UnityEngine;
 public class BarkCrystal : MonoBehaviour
 {
     public SpriteRenderer sprite;
+    public AudioSource audioSource;
+
+    public AudioClip crystalBreak;
+    public AudioClip crystalReform;
 
     public bool respawns = true;
     public float respawnTimer = 1f;
@@ -23,6 +27,7 @@ public class BarkCrystal : MonoBehaviour
         {
             available = true;
             sprite.color = enabledColor;
+            audioSource.PlayOneShot(crystalReform, 0.8f);
         }
     }
     
@@ -34,6 +39,7 @@ public class BarkCrystal : MonoBehaviour
         available = false;
         timer = respawnTimer;
         sprite.color = disabledColor;
+        audioSource.PlayOneShot(crystalBreak, 3.0f);
 
         player.ResetBark();
     }
@@ -49,6 +55,7 @@ public class BarkCrystal : MonoBehaviour
             available = false;
             timer = respawnTimer;
             sprite.color = disabledColor;
+            audioSource.PlayOneShot(crystalBreak, 3.0f);
             player.ResetBark();
         }
     }

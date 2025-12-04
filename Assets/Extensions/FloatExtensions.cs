@@ -19,6 +19,18 @@ namespace Mart581d.Extensions
         {
             return new Vector2(v.x, y);
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 WithXY(this Vector3 v, float x, float y)
+        {
+            return new Vector3(x, y, v.z);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 WithXY(this Vector3 v, Vector2 xy)
+        {
+            return new Vector3(xy.x, xy.y, v.z);
+        }
 
         public static float RoundTo(this float f, float step)
         {
