@@ -37,4 +37,10 @@ public class PauseScript : MonoBehaviour
         pauseOverlay.SetActive(false);
         // gameObject.SetActive(false);
     }
+
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Game Scene", LoadSceneMode.Single);
+    }
 }
