@@ -9,6 +9,6 @@ public class TitleScreenScript : MonoBehaviour
 
     public void MoveToGame()
     {
-        SceneManager.LoadScene("Game Scene", LoadSceneMode.Single);
+        SceneManager.LoadScene("Intro", LoadSceneMode.Single);
     }
 }

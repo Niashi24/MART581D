@@ -484,7 +484,7 @@ public class PlayerScript : MonoBehaviour
             }
             else
             {
-                this.rbdy.position = floorCeil.centroid + Vector2.up * (this.capsule.size.y * 0.05f);
+                this.rbdy.position = floorCeil.centroid;
                 this.ChangeState(PlayerState.Ground);
             }
         }

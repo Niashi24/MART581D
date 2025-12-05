@@ -43,15 +43,31 @@ public class CameraScript : MonoBehaviour
 
         Vector2 position = GetPositionRounded(transform.position);
 
-        var rect = Rect.MinMaxRect(-width / 2, -height / 2, width / 2, height / 2);
-        rect.position += position;
+        float startX = position.x - width / 2;
+        float startY = position.y - height / 2;
 
-        Span<Vector3> span = stackalloc Vector3[4];
-        span[0] = new Vector3(rect.xMin, rect.yMin);
-        span[1] = new Vector3(rect.xMin, rect.yMax);
-        span[2] = new Vector3(rect.xMax, rect.yMax);
-        span[3] = new Vector3(rect.xMax, rect.yMin);
-        Gizmos.DrawLineStrip(span, true);
+        for (int ix = -20; ix <= 20; ix++)
+        {
+            float x = startX + width * ix;
+            Debug.DrawRay(new Vector3(x, startY, 0), Vector3.up * 1000, Color.red);
+            Debug.DrawRay(new Vector3(x, startY, 0), Vector3.up * -1000, Color.red);
+        }
+        for (int iy = -20; iy <= 20; iy++)
+        {
+            float y = startY + height * iy;
+            Debug.DrawRay(new Vector3(startX, y, 0), Vector3.right * 1000, Color.red);
+            Debug.DrawRay(new Vector3(startX, y, 0), Vector3.right * -1000, Color.red);
+        }
+
+        // var rect = Rect.MinMaxRect(-width / 2, -height / 2, width / 2, height / 2);
+        // rect.position += position;
+        //
+        // Span<Vector3> span = stackalloc Vector3[4];
+        // span[0] = new Vector3(rect.xMin, rect.yMin);
+        // span[1] = new Vector3(rect.xMin, rect.yMax);
+        // span[2] = new Vector3(rect.xMax, rect.yMax);
+        // span[3] = new Vector3(rect.xMax, rect.yMin);
+        // Gizmos.DrawLineStrip(span, true);
         
         Gizmos.DrawWireSphere(position, 2f);
     }

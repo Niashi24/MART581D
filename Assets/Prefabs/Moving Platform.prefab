@@ -75,7 +75,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6890676877027730728}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -134,10 +134,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   end: {fileID: 5530213836202037632}
   rbdy: {fileID: 4663836333981594511}
-  movingToEnd: 0
   autoRepeat: 0
+  repeatStartCooldown: 0.1
+  repeatEndCooldown: 0
   moveToSpeed: 20
   moveBackSpeed: 20
+  repeatTimer: 0
+  movingToEnd: 0
 --- !u!50 &4663836333981594511
 Rigidbody2D:
   serializedVersion: 4
