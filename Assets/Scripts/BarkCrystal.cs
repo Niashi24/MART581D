@@ -14,8 +14,8 @@ public class BarkCrystal : MonoBehaviour
     public bool respawns = true;
     public float respawnTimer = 1f;
 
-    public Color enabledColor = Color.cyan;
-    public Color disabledColor = Color.gray;
+    public Sprite enabledSprite;
+    public Sprite disabledSprite;
 
     public bool available;
     public float timer = 0f;
@@ -26,7 +26,7 @@ public class BarkCrystal : MonoBehaviour
         if (!available && respawns && timer == 0f)
         {
             available = true;
-            sprite.color = enabledColor;
+            sprite.sprite = enabledSprite;
             audioSource.PlayOneShot(crystalReform, 0.8f);
         }
     }
@@ -38,7 +38,7 @@ public class BarkCrystal : MonoBehaviour
         
         available = false;
         timer = respawnTimer;
-        sprite.color = disabledColor;
+        sprite.sprite = disabledSprite;
         audioSource.PlayOneShot(crystalBreak, 3.0f);
 
         player.ResetBark();
@@ -54,7 +54,7 @@ public class BarkCrystal : MonoBehaviour
             if (player.canBark) return;
             available = false;
             timer = respawnTimer;
-            sprite.color = disabledColor;
+            sprite.sprite = disabledSprite;
             audioSource.PlayOneShot(crystalBreak, 3.0f);
             player.ResetBark();
         }

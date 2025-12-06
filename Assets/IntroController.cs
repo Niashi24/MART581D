@@ -31,6 +31,11 @@ public class IntroController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            SceneManager.LoadScene("Game Scene", LoadSceneMode.Single);
+        }
+        
         if (currentFrame < 0 || currentFrame >= frames.Length) return;
 
         autoAdvanceTimer = Mathf.Max(autoAdvanceTimer - Time.deltaTime, 0f);
@@ -42,7 +47,7 @@ public class IntroController : MonoBehaviour
             {
                 MoveNext();
             }
-        } else if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
+        } else if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
         {
             MoveNext();
         }

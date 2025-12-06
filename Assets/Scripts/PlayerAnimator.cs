@@ -15,6 +15,7 @@ public class PlayerAnimator : MonoBehaviour
     public AnimationClip barkJump;
     public AnimationClip land;
     public SpriteRenderer barkSprite;
+    public Animator barkSpriteAnimator;
 
     public float barkTimerDuration = 0.5f;
 
@@ -121,10 +122,11 @@ public class PlayerAnimator : MonoBehaviour
     {
         barkSprite.gameObject.SetActive(true);
         barkTimer = barkTimerDuration;
-        var sprTransform = barkSprite.transform;
-        sprTransform.localPosition = player.input.aim * player.barkDistance / 2f;
+        var sprTransform = barkSprite.transform.parent;
+        // sprTransform.localPosition = player.input.aim * player.barkDistance / 2f;
         sprTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(player.input.aim.y, player.input.aim.x) * Mathf.Rad2Deg);
-        sprTransform.localScale = new Vector3(player.barkDistance, player.barkWidth, 1f);
+        barkSpriteAnimator.Play("Shockwave");
+        // sprTransform.localScale = new Vector3(player.barkDistance, player.barkWidth, 1f);
     }
 
     private void PlayBarkJump()

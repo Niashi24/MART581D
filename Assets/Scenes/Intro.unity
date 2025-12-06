@@ -525,6 +525,33 @@ MonoBehaviour:
   - image: {fileID: 21300000, guid: b439ac4820c0258479b3a09902b2eda4, type: 3}
     autoAdvance: 0
     autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 19675d8b5db36324884bf90da2cf178b, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 40c1820a4f3e0fb40bcc49f28c468335, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 380eb8a2a4e8d7546b1a683ee00666d7, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 7db2b958327642b4ea1448ac3314cf11, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 5037fce3091a6f047b4bb54f619c0964, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: e9c1f2b2a05d2f74a91e1093a66f1120, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: cbc95fa9dbd8aa147a483fc1c4cca5ed, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 290deb9a5cedc16419ef5bd341db260b, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
+  - image: {fileID: 21300000, guid: 6971c6adf23cd1149919e6f33c4bac0c, type: 3}
+    autoAdvance: 0
+    autoAdvanceLength: 1
 --- !u!1 &1497772060
 GameObject:
   m_ObjectHideFlags: 0

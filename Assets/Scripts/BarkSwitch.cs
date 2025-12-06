@@ -13,15 +13,15 @@ public class BarkSwitch : MonoBehaviour
 
     public UnityEvent<bool> OnTrigger;
 
-    public Color disabledColor = Color.red;
-    public Color enabledColor = Color.green;
+    public Sprite disabledSprite;
+    public Sprite enabledSprite;
 
     public void Trigger()
     {
         if (state && !toggle) return;
 
         state = !state;
-        sprite.color = state ? enabledColor : disabledColor;
+        sprite.sprite = state ? enabledSprite : disabledSprite;
         OnTrigger.Invoke(state);
     }
 }
